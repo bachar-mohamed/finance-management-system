@@ -1,0 +1,66 @@
+# Java
+*.class
+*.log
+*.cache
+*.lock
+/target/
+logs/
+tmp/
+.DS_Store
+*.swp
+*.swo
+
+# Eclipse
+.settings/
+.project
+.classpath
+
+# IntelliJ IDEA
+.idea/
+*.iml
+*.ipr
+*.iws
+/out/
+
+# Maven
+mvnw
+mvnw.cmd
+.mvn/wrapper/maven-wrapper.jar
+
+# Gradle (uncomment if used)
+# .gradle/
+# build/
+
+# Node.js
+node_modules/
+dist/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# Vue.js environment variables
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+.env.staging.local
+
+# IDEs
+.vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# OS generated
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+*.DS_Store
+Icon?
+._*
+
+/src/main/resources/application.properties

@@ -1,0 +1,40 @@
+$somehow-black: #212a31;
+$dark-grey: #2e3944;
+$blue: #124e66;
+$dark-blue: #032541;
+$light-grey: #748d92;
+$very-light-grey: #d3d9d4;
+
+$font-weights: (
+  "regular": 400,
+  "medium": 500,
+  "bold": 600,
+);
+
+$bp-large: 78.15em; // 1250px
+$bp-medium: 61.25em; // 980px
+$bp-small: 37.5em; // 600px
+$bp-smallest: 31.25em; // 500
+
+@mixin flex($direction, $justify, $align, $gap) {
+  display: flex;
+  flex-direction: $direction;
+  justify-content: $justify;
+  align-items: $align;
+  gap: $gap;
+}
+
+@mixin absolute_centering {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  margin: auto;
+}
+
+@mixin background_param {
+  background-size: cover;
+  background-repeat: no-repeat;
+  background-position: center;
+}
