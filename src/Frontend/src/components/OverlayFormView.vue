@@ -38,7 +38,10 @@
             <input type="date" v-model="formData.date" required />
             <small v-if="errors.date">{{ errors.date }}</small>
           </div>
-          <button type="submit" class="submit-btn">Submit</button>
+          <button type="submit" class="submit-btn">
+            <span v-if="!getIsLoading">Submit</span>
+            <span v-else class="spinner"></span>
+          </button>
         </form>
       </div>
     </div>
@@ -46,6 +49,8 @@
 </template>
 
 <script>
+import { mapGetters } from "vuex";
+
 export default {
   name: "OverlayForm",
   props: {
@@ -77,6 +82,24 @@ export default {
       errors: {},
     };
   },
+  methods: {
+    handleSubmit() {
+      this.errors = {};
+      if (!this.formData.description) this.errors.description = "Description is required";
+      if (!this.formData.category) this.errors.category = "Category is required";
+      if (!this.formData.amount) this.errors.amount = "Amount is required";
+      if (Object.keys(this.errors).length === 0) {
+        console.log(this.formData);
+        this.$emit("submit", this.formData);
+      }
+    },
+    closeModal() {
+      this.$emit("update:visible", false);
+    },
+  },
+  computed: {
+    ...mapGetters(["getIsLoading"]),
+  },
   watch: {
     itemData(newVal) {
       this.formData = { ...newVal };
@@ -86,24 +109,12 @@ export default {
         this.formData = { ...this.itemData };
       }
     },
-  },
-  methods: {
-    handleSubmit() {
-      console.log("here");
-      this.errors = {};
-      if (!this.formData.description) this.errors.description = "Description is required";
-      if (!this.formData.category) this.errors.category = "Category is required";
-      if (!this.formData.amount) this.errors.amount = "Amount is required";
-      //if (!this.formData.date) this.errors.date = "Date is required";
-      if (Object.keys(this.errors).length === 0) {
-        console.log(this.formData);
-        this.$emit("submit", this.formData);
+    getIsLoading(newVal) {
+      console.log(newVal);
+      if (newVal == false) {
+        this.closeModal();
       }
     },
-    closeModal() {
-      this.$emit("update:visible", false);
-    },
-    reset() {},
   },
 };
 </script>
@@ -197,9 +208,25 @@ export default {
     .submit-btn:hover {
       background-color: #0056b3;
     }
+
+    .spinner {
+      width: 1rem;
+      height: 1rem;
+      border: 2px solid #fff;
+      border-top: 2px solid #3498db;
+      border-radius: 50%;
+      animation: spin 0.6s linear infinite;
+      display: inline-block;
+      vertical-align: middle;
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
   }
 
-  /* Transitions */
   .fade-enter-active,
   .fade-leave-active {
     transition: opacity 0.3s ease;

@@ -7,7 +7,7 @@ const REQUEST = async function (method, token, url, body_content = null) {
     method: method.toUpperCase(),
     headers: headers,
   };
-  if (method.toUpperCase() !== "GET" && method.toUpperCase() !== "DELETE" && body_content) {
+  if (method.toUpperCase() !== "GET" && body_content) {
     options.body = JSON.stringify(body_content);
   }
   try {

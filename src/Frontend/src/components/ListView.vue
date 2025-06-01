@@ -1,4 +1,14 @@
 <template>
+  <notification-view
+    v-if="isNotificationVisible"
+    v-model:visible="isNotificationVisible"
+    :image="notificationData.icon"
+    :notificationContent="notificationData.message"
+    :buttonText="notificationData.buttonContent"
+    @confirm="handleNotificationClick"
+  >
+  </notification-view>
+
   <overlay-form-view
     v-if="isFormVisible"
     v-model:visible="isFormVisible"
@@ -7,6 +17,7 @@
     :categories="categories"
     @submit="handleFormSubmit"
   ></overlay-form-view>
+
   <div v-if="list" class="list-container">
     <div class="control_tab">
       <button class="add-btn btn" @click="showAddForm">Add</button>
@@ -33,7 +44,7 @@
         <h3>Date Updated</h3>
       </div>
     </div>
-    <ul class="list">
+    <transition-group name="fade" tag="ul" class="list">
       <li
         v-for="(item, index) in list"
         :key="item.id"
@@ -53,23 +64,36 @@
           <div class="modify button">
             <div v-html="editSvg" @click="updateItem(index)"></div>
           </div>
-          <div class="delete button">
+          <div class="delete button" @click="notifyUser(item.id, 3)">
             <div v-html="deleteSvg"></div>
           </div>
         </div>
       </li>
-    </ul>
+    </transition-group>
   </div>
 </template>
 
 <script>
 import OverlayFormView from "./OverlayFormView.vue";
+import NotificationView from "./NotificationView.vue";
+import { mapGetters } from "vuex";
 export default {
-  components: { OverlayFormView },
+  components: { OverlayFormView, NotificationView },
   props: ["list", "categories"],
   data() {
     return {
       operationType: -1,
+      notificationData: {
+        itemId: -1,
+        icon: "",
+        message: "",
+        buttonContent: "",
+      },
+      notificationIcons: [
+        '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--!Font Awesome Free 6.7.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2025 Fonticons, Inc.--><path fill="#63E6BE" d="M256 512A256 256 0 1 0 256 0a256 256 0 1 0 0 512zM369 209L241 337c-9.4 9.4-24.6 9.4-33.9 0l-64-64c-9.4-9.4-9.4-24.6 0-33.9s24.6-9.4 33.9 0l47 47L335 175c9.4-9.4 24.6-9.4 33.9 0s9.4 24.6 0 33.9z"/></svg>',
+        '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--!Font Awesome Free 6.7.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2025 Fonticons, Inc.--><path fill="#f57a7a" d="M256 32c14.2 0 27.3 7.5 34.5 19.8l216 368c7.3 12.4 7.3 27.7 .2 40.1S486.3 480 472 480L40 480c-14.3 0-27.6-7.7-34.7-20.1s-7-27.8 .2-40.1l216-368C228.7 39.5 241.8 32 256 32zm0 128c-13.3 0-24 10.7-24 24l0 112c0 13.3 10.7 24 24 24s24-10.7 24-24l0-112c0-13.3-10.7-24-24-24zm32 224a32 32 0 1 0 -64 0 32 32 0 1 0 64 0z"/></svg>',
+      ],
+      isNotificationVisible: false,
       isFormVisible: false,
       selectedItem: {},
       editSvg: `<svg width="20px" height="20px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -112,13 +136,79 @@ export default {
         category: this.list[index].categoryName,
       };
     },
+    notifyUser(
+      index = -1,
+      operationType = -1,
+      message = "Delete This Operation ?",
+      buttonContent = "Delete",
+      icon = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--!Font Awesome Free 6.7.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2025 Fonticons, Inc.--><path fill="#f57a7a" d="M256 32c14.2 0 27.3 7.5 34.5 19.8l216 368c7.3 12.4 7.3 27.7 .2 40.1S486.3 480 472 480L40 480c-14.3 0-27.6-7.7-34.7-20.1s-7-27.8 .2-40.1l216-368C228.7 39.5 241.8 32 256 32zm0 128c-13.3 0-24 10.7-24 24l0 112c0 13.3 10.7 24 24 24s24-10.7 24-24l0-112c0-13.3-10.7-24-24-24zm32 224a32 32 0 1 0 -64 0 32 32 0 1 0 64 0z"/></svg>'
+    ) {
+      this.operationType = operationType;
+      this.notificationData.itemId = index;
+      this.notificationData.buttonContent = buttonContent;
+      this.notificationData.message = message;
+      this.notificationData.icon = icon;
+      this.isNotificationVisible = true;
+    },
+    handleNotificationClick() {
+      if (this.operationType == 3) {
+        let data = {
+          itemId: this.notificationData.itemId,
+        };
+        this.$store.dispatch("deleteExpense", data);
+      } else {
+        this.isNotificationVisible = false;
+      }
+    },
     handleFormSubmit(data) {
       console.log(data);
-      if (this.operationType == 1) {
-        this.$store.dispatch("addExpense", data);
-      } else if (this.operationType == 2) {
-        this.$store.dispatch("updateExpense", data);
+      console.log(data.amount);
+      if (data.amount != undefined) {
+        console.log(`here because ${data.amount}`);
+        if (this.operationType == 1) {
+          this.$store.dispatch("addExpense", data);
+        } else if (this.operationType == 2) {
+          this.$store.dispatch("updateExpense", data);
+        }
       }
+    },
+  },
+  computed: {
+    ...mapGetters([
+      "getIsLoading",
+      "getAddExpenseStatus",
+      "getUpdateExpenseStatus",
+      "getDeleteExpenseStatus",
+    ]),
+  },
+  watch: {
+    getAddExpenseStatus(newVal) {
+      if (newVal == true) {
+        this.notifyUser(
+          -1,
+          -1,
+          "Operation Performed Successfully !",
+          "OK",
+          this.notificationIcons[0]
+        );
+      } else {
+        this.notifyUser(-1, -1, "something went wrong !", "OK", this.notificationIcons[1]);
+      }
+    },
+    getUpdateExpenseStatus(newVal) {
+      if (newVal == true) {
+        this.notifyUser(
+          -1,
+          -1,
+          "Operation Performed Successfully !",
+          "OK",
+          this.notificationIcons[0]
+        );
+      }
+      this.notifyUser(-1, -1, "something went wrong !", "OK", this.notificationIcons[1]);
+    },
+    getDeleteExpenseStatus(newVal) {
+      if (newVal == true) this.isNotificationVisible = false;
     },
   },
 };
@@ -126,6 +216,21 @@ export default {
 
 <style lang="scss" scoped>
 @import "../assets/_base.scss";
+
+.fade-enter-active,
+.fade-leave-active {
+  transition: all 0.3s ease;
+}
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+  transform: translateY(10px);
+}
+/* Leaving */
+.fade-leave-from {
+  opacity: 1;
+  transform: translateY(0);
+}
 
 li {
   list-style: none;

@@ -15,15 +15,17 @@
           <label for="email" class="form-label">Email</label>
           <div class="input-container">
             <input
-                v-model="email"
-                type="email"
-                id="email"
-                class="form-input"
-                :class="{ 'input-error': emailError }"
-                placeholder="Enter your email address"
-                required
+              v-model="email"
+              type="email"
+              id="email"
+              class="form-input"
+              :class="{ 'input-error': emailError }"
+              placeholder="Enter your email address"
+              required
             />
-            <small v-if="emailError" class="error-message">Please enter a valid email address</small>
+            <small v-if="emailError" class="error-message"
+              >Please enter a valid email address</small
+            >
           </div>
         </div>
 
@@ -31,18 +33,19 @@
           <label for="password" class="form-label">Password</label>
           <div class="input-container">
             <input
-                v-model="password"
-                type="password"
-                id="password"
-                class="form-input"
-                placeholder="Enter your password"
-                required
+              v-model="password"
+              type="password"
+              id="password"
+              class="form-input"
+              placeholder="Enter your password"
+              required
             />
           </div>
         </div>
 
         <button @click.prevent="authenticateUser" class="login-button">
-          Login
+          <span v-if="!isLoading">Login</span>
+          <span v-else class="spinner"></span>
         </button>
       </form>
 
@@ -57,19 +60,20 @@
 <script>
 import CardView from "./CardView.vue";
 //import NotificationView from "@/components/NotificationView";
-import {mapGetters} from "vuex";
+import { mapGetters } from "vuex";
 
 export default {
-  components: {CardView},
+  components: { CardView },
   emits: ["error-msg"],
   data() {
     return {
+      isLoading: false,
       button_content: "",
       text: "",
       source: "",
       email: "",
       password: "",
-      emailError: false
+      emailError: false,
     };
   },
   methods: {
@@ -83,36 +87,37 @@ export default {
         return true;
       }
     },
-    switchToSignup(){
-      this.$router.push("sign-up")
+    switchToSignup() {
+      this.$router.push("sign-up");
     },
     async authenticateUser() {
       if (!this.emailValidator()) return;
-
+      this.isLoading = true;
       const payload = {
         email: this.email,
-        password: this.password
-      }
+        password: this.password,
+      };
 
       try {
-        await this.$store.dispatch("authenticateUser", payload)
+        await this.$store.dispatch("authenticateUser", payload);
         if (this.getUserId != -1) {
-          this.$router.push("/home/expenses")
+          this.$router.push("/home/expenses");
         } else {
           //this.$refs.notification.showNotification()
-          this.button_content = "OK"
-          this.text = "Wrong email or password. Please try again."
+          this.button_content = "OK";
+          this.text = "Wrong email or password. Please try again.";
         }
       } catch (error) {
-        console.log("login failed: " + error)
+        console.log("login failed: " + error);
         //this.$refs.notification.showNotification()
-        this.button_content = "OK"
-        this.text = "Login failed. Please try again later."
+        this.button_content = "OK";
+        this.text = "Login failed. Please try again later.";
       }
-    }
+      this.isLoading = false;
+    },
   },
   computed: {
-    ...mapGetters(['getUserId'])
+    ...mapGetters(["getUserId"]),
   },
 };
 </script>
@@ -213,6 +218,23 @@ export default {
 
   &:hover {
     background-color: #3a7bc8;
+  }
+
+  .spinner {
+    width: 1rem;
+    height: 1rem;
+    border: 2px solid #fff;
+    border-top: 2px solid #3498db;
+    border-radius: 50%;
+    animation: spin 0.6s linear infinite;
+    display: inline-block;
+    vertical-align: middle;
+  }
+
+  @keyframes spin {
+    to {
+      transform: rotate(360deg);
+    }
   }
 }
 

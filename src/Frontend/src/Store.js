@@ -11,6 +11,7 @@ export default createStore({
       },
       crudStatus: {
         isLoading: false,
+        addExpenseStatus: false,
         updateExpenseStatus: false,
         deleteExpenseStatus: false,
         updateRevenueStatus: false,
@@ -55,7 +56,6 @@ export default createStore({
         const transactionMonth = String(transactionDate.getMonth() + 1).padStart(2, "0");
         const transactionYear = transactionDate.getFullYear();
         const formattedTransactionDate = `${transactionDay}-${transactionMonth}-${transactionYear}`;
-        /*****/
         const updateDay = String(updateDate.getDate()).padStart(2, "0");
         const updateMonth = String(updateDate.getMonth() + 1).padStart(2, "0");
         const updateYear = updateDate.getFullYear();
@@ -68,8 +68,8 @@ export default createStore({
 
       console.log(state.user.expenses.serverData);
     },
-    setMonthlyExpenseSum(state, payload) {
-      const total = payload.reduce((acc, expense) => {
+    setMonthlyExpenseSum(state) {
+      const total = state.user.expenses.serverData.reduce((acc, expense) => {
         return acc + parseFloat(expense.amount);
       }, 0);
 
@@ -85,9 +85,9 @@ export default createStore({
       });
       console.log(state.user.expenses.highestExpense);
     },
-    setTopExpenseCategories(state, payload) {
+    setTopExpenseCategories(state) {
       const categoryTotals = {};
-      payload.forEach((transaction) => {
+      state.user.expenses.serverData.forEach((transaction) => {
         const { categoryName, amount, categoryImage } = transaction;
         if (!categoryTotals[categoryName]) {
           categoryTotals[categoryName] = {
@@ -110,10 +110,10 @@ export default createStore({
       console.log("pie");
       console.log(state.user.expenses.pieChartData);
     },
-    setExpenseLineChartData(state, payload) {
+    setExpenseLineChartData(state) {
       const dailyTotals = {};
 
-      payload.forEach((expense) => {
+      state.user.expenses.serverData.forEach((expense) => {
         const dateString = expense.transactionDate;
         const [day, month, year] = dateString.split("-");
         const date = new Date(year, month - 1, day);
@@ -128,6 +128,21 @@ export default createStore({
       const days = sortedDays;
       state.user.expenses.lineChartData = { amounts, days };
       console.log(state.user.expenses.lineChartData);
+    },
+    addNewExpense(state, data) {
+      const transactionDate = new Date(data["transactionDate"]);
+      const updateDate = new Date(data["updatedAt"]);
+      const transactionDay = String(transactionDate.getDate()).padStart(2, "0");
+      const transactionMonth = String(transactionDate.getMonth() + 1).padStart(2, "0");
+      const transactionYear = transactionDate.getFullYear();
+      const formattedTransactionDate = `${transactionDay}-${transactionMonth}-${transactionYear}`;
+      const updateDay = String(updateDate.getDate()).padStart(2, "0");
+      const updateMonth = String(updateDate.getMonth() + 1).padStart(2, "0");
+      const updateYear = updateDate.getFullYear();
+      const formattedUpdateDate = `${updateDay}-${updateMonth}-${updateYear}`;
+      data["transactionDate"] = formattedTransactionDate;
+      data["updatedAt"] = formattedUpdateDate;
+      state.user.expenses.serverData.unshift(data);
     },
     setCategories(state, data) {
       state.user.expenses.expenseAllCategories = data.filter((category) => {
@@ -163,10 +178,10 @@ export default createStore({
         const data = response;
         console.log(data);
         context.commit("setExpenses", data);
-        context.commit("setMonthlyExpenseSum", data);
-        context.commit("setTopExpenseCategories", data);
-        await context.commit("setExpenseLineChartData", data);
-        context.commit("setHighestMonthlyExpense", data);
+        context.commit("setMonthlyExpenseSum");
+        context.commit("setTopExpenseCategories");
+        context.commit("setExpenseLineChartData");
+        context.commit("setHighestMonthlyExpense");
       } catch (error) {
         console.log(error);
       }
@@ -185,6 +200,9 @@ export default createStore({
     async addExpense(context, payload) {
       if (payload.date == undefined) return;
       context.state.crudStatus.isLoading = true;
+      context.state.crudStatus.addExpenseStatus = false;
+      context.state.crudStatus.updateExpenseStatus = false;
+      context.state.crudStatus.deleteExpenseStatus = false;
       const url = `http://localhost:1234/api/expenses/add-expense`;
       console.log(`payload date is ${payload.date}`);
       const body = {
@@ -199,6 +217,10 @@ export default createStore({
         const response = await REQUEST("POST", context.state.authRequest.token, url, body);
         const data = response;
         console.log(data);
+        if (data != null) {
+          context.commit("addNewExpense", data);
+          context.state.crudStatus.addExpenseStatus = true;
+        }
       } catch (error) {
         console.log(error);
       }
@@ -208,6 +230,8 @@ export default createStore({
       if (payload.description == undefined) return;
       context.state.crudStatus.isLoading = true;
       context.state.crudStatus.updateExpenseStatus = false;
+      context.state.crudStatus.addExpenseStatus = false;
+      context.state.crudStatus.deleteExpenseStatus = false;
       console.log(payload);
       const url = `http://localhost:1234/api/expenses/update-expense`;
       const body = {
@@ -231,17 +255,20 @@ export default createStore({
     async deleteExpense(context, payload) {
       context.state.crudStatus.isLoading = true;
       context.state.crudStatus.deleteExpenseStatus = false;
+      context.state.crudStatus.updateExpenseStatus = false;
+      context.state.crudStatus.addExpenseStatus = false;
+      console.log(payload);
       const url = `http://localhost:1234/api/expenses/delete-expense`;
       const body = {
         userId: context.state.user.id,
-        expenseId: payload.expenseId,
+        expenseId: payload.itemId,
       };
       console.log(body);
       try {
         const response = await REQUEST("DELETE", context.state.authRequest.token, url, body);
         const data = response;
         console.log(data);
-        context.state.crudStatus.updateExpenseStatus = true;
+        context.state.crudStatus.deleteExpenseStatus = true;
       } catch (error) {
         console.log(error);
       }
@@ -278,6 +305,18 @@ export default createStore({
     },
     getRevenueCategories(state) {
       return state.user.revenue.RevenueAllCategories;
+    },
+    getAddExpenseStatus(state) {
+      return state.crudStatus.addExpenseStatus;
+    },
+    getUpdateExpenseStatus(state) {
+      return state.crudStatus.updateExpenseStatus;
+    },
+    getDeleteExpenseStatus(state) {
+      return state.crudStatus.deleteExpenseStatus;
+    },
+    getIsLoading(state) {
+      return state.crudStatus.isLoading;
     },
   },
 });
