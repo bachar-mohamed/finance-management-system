@@ -27,7 +27,6 @@ export default createStore({
           lineChartData: {},
           pieChartData: [],
           topMonthlyCategories: [],
-          expenseCategories: [],
         },
         revenue: {
           serverData: [],
@@ -37,7 +36,6 @@ export default createStore({
           lineChartData: [],
           pieChartData: [],
           topMonthlyCategories: [],
-          RevenueCategories: [],
         },
       },
     };
@@ -144,6 +142,27 @@ export default createStore({
       data["updatedAt"] = formattedUpdateDate;
       state.user.expenses.serverData.unshift(data);
     },
+    updateExpense(state, data) {
+      console.log(data);
+      let expense = state.user.expenses.serverData.find((exp) => {
+        return exp.id == data.itemId;
+      });
+      console.log("before");
+      console.log(expense);
+      expense["description"] = data.description;
+      expense["amount"] = data.amount;
+      expense["categoryName"] = data.category;
+      expense["categoryImage"] = state.user.expenses.expenseAllCategories.find((exp) => {
+        return exp.categoryName == data.category;
+      }).categoryImage;
+      console.log("after");
+      console.log(expense);
+    },
+    deleteExpense(state, data) {
+      state.user.expenses.serverData = state.user.expenses.serverData.filter((exp) => {
+        return exp.id != data.itemId;
+      });
+    },
     setCategories(state, data) {
       state.user.expenses.expenseAllCategories = data.filter((category) => {
         return category.type == "expense";
@@ -198,6 +217,7 @@ export default createStore({
       }
     },
     async addExpense(context, payload) {
+      console.log("adding");
       if (payload.date == undefined) return;
       context.state.crudStatus.isLoading = true;
       context.state.crudStatus.addExpenseStatus = false;
@@ -228,6 +248,7 @@ export default createStore({
     },
     async updateExpense(context, payload) {
       if (payload.description == undefined) return;
+      console.log("updating");
       context.state.crudStatus.isLoading = true;
       context.state.crudStatus.updateExpenseStatus = false;
       context.state.crudStatus.addExpenseStatus = false;
@@ -246,7 +267,10 @@ export default createStore({
         const response = await REQUEST("PUT", context.state.authRequest.token, url, body);
         const data = response;
         console.log(data);
-        context.state.crudStatus.updateExpenseStatus = true;
+        if (data) {
+          context.commit("updateExpense", payload);
+          context.state.crudStatus.updateExpenseStatus = true;
+        }
       } catch (error) {
         console.log(error);
       }
@@ -268,7 +292,10 @@ export default createStore({
         const response = await REQUEST("DELETE", context.state.authRequest.token, url, body);
         const data = response;
         console.log(data);
-        context.state.crudStatus.deleteExpenseStatus = true;
+        if (data) {
+          context.commit("deleteExpense", payload);
+          context.state.crudStatus.deleteExpenseStatus = true;
+        }
       } catch (error) {
         console.log(error);
       }

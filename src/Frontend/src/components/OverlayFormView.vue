@@ -32,7 +32,6 @@
             <input type="number" step="0.01" v-model.number="formData.amount" required />
             <small v-if="errors.amount">{{ errors.amount }}</small>
           </div>
-
           <div v-if="opType != 2" class="form-group">
             <label>Income Date</label>
             <input type="date" v-model="formData.date" required />

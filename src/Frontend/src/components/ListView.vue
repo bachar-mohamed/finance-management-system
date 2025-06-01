@@ -127,7 +127,6 @@ export default {
       };
     },
     updateItem(index) {
-      this.isFormVisible = true;
       this.operationType = 2;
       this.selectedItem = {
         itemId: this.list[index].id,
@@ -135,6 +134,7 @@ export default {
         amount: this.list[index].amount,
         category: this.list[index].categoryName,
       };
+      this.isFormVisible = true;
     },
     notifyUser(
       index = -1,
@@ -161,10 +161,8 @@ export default {
       }
     },
     handleFormSubmit(data) {
-      console.log(data);
-      console.log(data.amount);
+      console.log(` optype is ${this.operationType}`);
       if (data.amount != undefined) {
-        console.log(`here because ${data.amount}`);
         if (this.operationType == 1) {
           this.$store.dispatch("addExpense", data);
         } else if (this.operationType == 2) {
@@ -199,13 +197,14 @@ export default {
       if (newVal == true) {
         this.notifyUser(
           -1,
-          -1,
+          2,
           "Operation Performed Successfully !",
           "OK",
           this.notificationIcons[0]
         );
+      } else {
+        this.notifyUser(-1, 2, "something went wrong !", "OK", this.notificationIcons[1]);
       }
-      this.notifyUser(-1, -1, "something went wrong !", "OK", this.notificationIcons[1]);
     },
     getDeleteExpenseStatus(newVal) {
       if (newVal == true) this.isNotificationVisible = false;
