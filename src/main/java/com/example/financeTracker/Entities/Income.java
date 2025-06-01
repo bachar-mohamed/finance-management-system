@@ -37,11 +37,13 @@ public class Income {
 
     }
 
-    public Income(User user, Category category, Double amount, String description) {
+    public Income(User user, Category category, Double amount, String description,LocalDateTime incomeDate) {
         this.user = user;
         this.category = category;
         this.amount = amount;
         this.description = description;
+        this.transactionDate=incomeDate;
+        this.updatedAt = LocalDateTime.now();
     }
 
     public Long getId() {
