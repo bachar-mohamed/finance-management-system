@@ -46,6 +46,121 @@ export default createStore({
       state.authRequest.token = payload.token;
       state.user.id = payload.id;
     },
+    //income
+    setRevenues(state, payload) {
+      state.user.revenue.serverData = payload.map((transaction) => {
+        const transactionDate = new Date(transaction["transactionDate"]);
+        const updateDate = new Date(transaction["updatedAt"]);
+        const transactionDay = String(transactionDate.getDate()).padStart(2, "0");
+        const transactionMonth = String(transactionDate.getMonth() + 1).padStart(2, "0");
+        const transactionYear = transactionDate.getFullYear();
+        const formattedTransactionDate = `${transactionDay}-${transactionMonth}-${transactionYear}`;
+        const updateDay = String(updateDate.getDate()).padStart(2, "0");
+        const updateMonth = String(updateDate.getMonth() + 1).padStart(2, "0");
+        const updateYear = updateDate.getFullYear();
+        const formattedUpdateDate = `${updateDay}-${updateMonth}-${updateYear}`;
+
+        transaction["transactionDate"] = formattedTransactionDate;
+        transaction["updatedAt"] = formattedUpdateDate;
+        return transaction;
+      });
+
+      console.log(state.user.revenue.serverData);
+    },
+    setMonthlyRevenueSum(state) {
+      const total = state.user.revenue.serverData.reduce((acc, expense) => {
+        return acc + parseFloat(expense.amount);
+      }, 0);
+
+      state.user.revenue.monthlySum = parseFloat(total.toFixed(2));
+
+      console.log(state.user.revenue.monthlySum);
+    },
+    setHighestMonthlyRevenue(state) {
+      state.user.revenue.highestExpense = 0;
+      state.user.revenue.lineChartData.amounts.forEach((amount) => {
+        console.log(`${state.user.revenue.highestExpense},${amount}`);
+        state.user.revenue.highestExpense = Math.max(state.user.revenue.highestExpense, amount);
+      });
+      console.log(state.user.revenue.highestExpense);
+    },
+    setTopRevenueCategories(state) {
+      const categoryTotals = {};
+      state.user.revenue.serverData.forEach((transaction) => {
+        const { categoryName, amount, categoryImage } = transaction;
+        if (!categoryTotals[categoryName]) {
+          categoryTotals[categoryName] = {
+            categoryName,
+            totalAmount: 0,
+            categoryImage,
+          };
+        }
+        categoryTotals[categoryName].totalAmount += amount;
+      });
+      const sortedCategories = Object.values(categoryTotals).sort(
+        (a, b) => b.totalAmount - a.totalAmount
+      );
+      state.user.revenue.topMonthlyCategories = sortedCategories;
+      console.log(state.user.revenue.topMonthlyCategories);
+      state.user.revenue.pieChartData = sortedCategories.map((item) => ({
+        value: item.totalAmount,
+        name: item.categoryName,
+      }));
+      console.log("pie");
+      console.log(state.user.revenue.pieChartData);
+    },
+    setRevenueLineChartData(state) {
+      const dailyTotals = {};
+
+      state.user.revenue.serverData.forEach((expense) => {
+        const dateString = expense.transactionDate;
+        const [day, month, year] = dateString.split("-");
+        const date = new Date(year, month - 1, day);
+        const dayStr = String(date.getDate()).padStart(2, "0");
+        if (!dailyTotals[dayStr]) {
+          dailyTotals[dayStr] = 0;
+        }
+        dailyTotals[dayStr] += parseFloat(expense.amount);
+      });
+      const sortedDays = Object.keys(dailyTotals).sort();
+      const amounts = sortedDays.map((day) => Math.round(dailyTotals[day] * 100) / 100);
+      const days = sortedDays;
+      state.user.revenue.lineChartData = { amounts, days };
+      console.log(state.user.revenue.lineChartData);
+    },
+    addNewRevenue(state, data) {
+      const transactionDate = new Date(data["transactionDate"]);
+      const updateDate = new Date(data["updatedAt"]);
+      const transactionDay = String(transactionDate.getDate()).padStart(2, "0");
+      const transactionMonth = String(transactionDate.getMonth() + 1).padStart(2, "0");
+      const transactionYear = transactionDate.getFullYear();
+      const formattedTransactionDate = `${transactionDay}-${transactionMonth}-${transactionYear}`;
+      const updateDay = String(updateDate.getDate()).padStart(2, "0");
+      const updateMonth = String(updateDate.getMonth() + 1).padStart(2, "0");
+      const updateYear = updateDate.getFullYear();
+      const formattedUpdateDate = `${updateDay}-${updateMonth}-${updateYear}`;
+      data["transactionDate"] = formattedTransactionDate;
+      data["updatedAt"] = formattedUpdateDate;
+      state.user.revenue.serverData.unshift(data);
+    },
+    updateRevenue(state, data) {
+      console.log(data);
+      let revenue = state.user.revenue.serverData.find((exp) => {
+        return exp.id == data.itemId;
+      });
+      revenue["description"] = data.description;
+      revenue["amount"] = data.amount;
+      revenue["categoryName"] = data.category;
+      revenue["categoryImage"] = state.user.revenue.RevenueAllCategories.find((exp) => {
+        return exp.categoryName == data.category;
+      }).categoryImage;
+    },
+    deleteRevenue(state, data) {
+      state.user.revenue.serverData = state.user.revenue.serverData.filter((exp) => {
+        return exp.id != data.itemId;
+      });
+    },
+    //expense
     setExpenses(state, payload) {
       state.user.expenses.serverData = payload.map((transaction) => {
         const transactionDate = new Date(transaction["transactionDate"]);
@@ -163,6 +278,7 @@ export default createStore({
         return exp.id != data.itemId;
       });
     },
+    //categories
     setCategories(state, data) {
       state.user.expenses.expenseAllCategories = data.filter((category) => {
         return category.type == "expense";
@@ -188,6 +304,109 @@ export default createStore({
         console.log(error);
       }
     },
+    //incomes
+    async loadRevenueList(context, payload) {
+      console.log(payload);
+      const url = `http://localhost:1234/api/incomes/monthly-income?userId=${context.state.user.id}&year=${payload.year}&month=${payload.month}`;
+      console.log(url);
+      try {
+        const response = await REQUEST("GET", context.state.authRequest.token, url);
+        const data = response;
+        console.log(data);
+        context.commit("setRevenues", data);
+        context.commit("setMonthlyRevenueSum");
+        context.commit("setTopRevenueCategories");
+        context.commit("setRevenueLineChartData");
+        context.commit("setHighestMonthlyRevenue");
+      } catch (error) {
+        console.log(error);
+      }
+    },
+    async addRevenue(context, payload) {
+      if (payload.date == undefined) return;
+      context.state.crudStatus.isLoading = true;
+      context.state.crudStatus.addExpenseStatus = false;
+      context.state.crudStatus.updateExpenseStatus = false;
+      context.state.crudStatus.deleteExpenseStatus = false;
+      const url = `http://localhost:1234/api/incomes/add-income`;
+      console.log(`payload date is ${payload.date}`);
+      const body = {
+        userId: context.state.user.id,
+        amount: payload.amount,
+        description: payload.description,
+        category: payload.category,
+        transactionDate: (([y, m, d]) => `${m}/${d}/${y}`)(payload.date.split("-")),
+      };
+      console.log(body);
+      try {
+        const response = await REQUEST("POST", context.state.authRequest.token, url, body);
+        const data = response;
+        console.log(data);
+        if (data != null) {
+          context.commit("addNewRevenue", data);
+          context.state.crudStatus.addExpenseStatus = true;
+        }
+      } catch (error) {
+        console.log(error);
+      }
+      context.state.crudStatus.isLoading = false;
+    },
+    async updateRevenue(context, payload) {
+      if (payload.description == undefined) return;
+      console.log("updating");
+      context.state.crudStatus.isLoading = true;
+      context.state.crudStatus.updateExpenseStatus = false;
+      context.state.crudStatus.addExpenseStatus = false;
+      context.state.crudStatus.deleteExpenseStatus = false;
+      console.log(payload);
+      const url = `http://localhost:1234/api/incomes/update-income`;
+      const body = {
+        userId: context.state.user.id,
+        incomeId: payload.itemId,
+        description: payload.description,
+        category: payload.category,
+        amount: payload.amount,
+      };
+      console.log(body);
+      try {
+        const response = await REQUEST("PUT", context.state.authRequest.token, url, body);
+        const data = response;
+        console.log(data);
+        if (data) {
+          context.commit("updateRevenue", payload);
+          context.state.crudStatus.updateExpenseStatus = true;
+        }
+      } catch (error) {
+        console.log(error);
+      }
+      context.state.crudStatus.isLoading = false;
+    },
+    async deleteRevenue(context, payload) {
+      context.state.crudStatus.isLoading = true;
+      context.state.crudStatus.deleteExpenseStatus = false;
+      context.state.crudStatus.updateExpenseStatus = false;
+      context.state.crudStatus.addExpenseStatus = false;
+      console.log(payload);
+      const url = `http://localhost:1234/api/incomes/delete-income`;
+      const body = {
+        userId: context.state.user.id,
+        incomeId: payload.itemId,
+      };
+      console.log(body);
+      try {
+        const response = await REQUEST("DELETE", context.state.authRequest.token, url, body);
+        const data = response;
+        console.log(data);
+        if (data) {
+          context.commit("deleteRevenue", payload);
+          context.state.crudStatus.deleteExpenseStatus = true;
+        }
+      } catch (error) {
+        console.log(error);
+      }
+      context.state.crudStatus.isLoading = false;
+    },
+    //expenses
     async loadExpenses(context, payload) {
       console.log(payload);
       const url = `http://localhost:1234/api/expenses/monthly-expenses?userId=${context.state.user.id}&year=${payload.year}&month=${payload.month}`;
@@ -201,17 +420,6 @@ export default createStore({
         context.commit("setTopExpenseCategories");
         context.commit("setExpenseLineChartData");
         context.commit("setHighestMonthlyExpense");
-      } catch (error) {
-        console.log(error);
-      }
-    },
-    async loadCategories(context) {
-      const url = `http://localhost:1234/api/categories/get-categories`;
-      try {
-        const response = await REQUEST("GET", context.state.authRequest.token, url);
-        const data = response;
-        console.log(data);
-        context.commit("setCategories", data);
       } catch (error) {
         console.log(error);
       }
@@ -301,6 +509,18 @@ export default createStore({
       }
       context.state.crudStatus.isLoading = false;
     },
+    //categories
+    async loadCategories(context) {
+      const url = `http://localhost:1234/api/categories/get-categories`;
+      try {
+        const response = await REQUEST("GET", context.state.authRequest.token, url);
+        const data = response;
+        console.log(data);
+        context.commit("setCategories", data);
+      } catch (error) {
+        console.log(error);
+      }
+    },
   },
   getters: {
     getUserId(state) {
@@ -309,6 +529,7 @@ export default createStore({
     getUserToken(state) {
       return state.authRequest.token;
     },
+    //expenses
     getMonthlyExpenses(state) {
       return state.user.expenses.serverData;
     },
@@ -330,9 +551,29 @@ export default createStore({
     getExpenseCategories(state) {
       return state.user.expenses.expenseAllCategories;
     },
-    getRevenueCategories(state) {
+    //income
+    getMonthlyIncome(state) {
+      return state.user.revenue.serverData;
+    },
+    getTotalIncome(state) {
+      return state.user.revenue.monthlySum;
+    },
+    getHighestIncome(state) {
+      return state.user.revenue.highestExpense;
+    },
+    getTopIncomeCategories(state) {
+      return state.user.revenue.topMonthlyCategories;
+    },
+    getIncomeLineChartData(state) {
+      return state.user.revenue.lineChartData;
+    },
+    getIncomePieChartData(state) {
+      return state.user.revenue.pieChartData;
+    },
+    getIncomeCategories(state) {
       return state.user.revenue.RevenueAllCategories;
     },
+    //status
     getAddExpenseStatus(state) {
       return state.crudStatus.addExpenseStatus;
     },

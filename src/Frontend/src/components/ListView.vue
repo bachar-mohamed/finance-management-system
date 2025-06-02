@@ -155,7 +155,9 @@ export default {
         let data = {
           itemId: this.notificationData.itemId,
         };
-        this.$store.dispatch("deleteExpense", data);
+        this.$route.name == "expenses"
+          ? this.$store.dispatch("deleteExpense", data)
+          : this.$store.dispatch("deleteRevenue", data);
       } else {
         this.isNotificationVisible = false;
       }
@@ -164,9 +166,13 @@ export default {
       console.log(` optype is ${this.operationType}`);
       if (data.amount != undefined) {
         if (this.operationType == 1) {
-          this.$store.dispatch("addExpense", data);
+          this.$route.name == "expenses"
+            ? this.$store.dispatch("addExpense", data)
+            : this.$store.dispatch("addRevenue", data);
         } else if (this.operationType == 2) {
-          this.$store.dispatch("updateExpense", data);
+          this.$route.name == "expenses"
+            ? this.$store.dispatch("updateExpense", data)
+            : this.$store.dispatch("updateRevenue", data);
         }
       }
     },
@@ -207,7 +213,18 @@ export default {
       }
     },
     getDeleteExpenseStatus(newVal) {
-      if (newVal == true) this.isNotificationVisible = false;
+      this.isNotificationVisible = false;
+      if (newVal == true) {
+        this.notifyUser(
+          -1,
+          -1,
+          "Operation Performed Successfully !",
+          "OK",
+          this.notificationIcons[0]
+        );
+      } else {
+        this.notifyUser(-1, 3, "something went wrong !", "OK", this.notificationIcons[1]);
+      }
     },
   },
 };

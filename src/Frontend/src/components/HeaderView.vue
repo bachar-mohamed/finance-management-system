@@ -36,49 +36,33 @@
 <script>
 export default {
   data() {
-    return {
-      currentRoute: ''
-    }
-  },
-  created() {
-    // Set initial route on component creation
-    this.currentRoute = this.$route.name || this.$route.path.substring(1);
+    return {};
   },
   methods: {
     switchToUser() {
       this.$router.push("user");
-      this.currentRoute = 'user';
     },
     openDashBoard() {
       this.$router.push("overview");
-      this.currentRoute = 'overview';
     },
     openExpenses() {
       this.$store.commit("setActiveTag", true);
       this.$router.push("expenses");
-      this.currentRoute = 'expenses';
     },
     openIncome() {
       this.$store.commit("setActiveTag", false);
       this.$router.push("income");
-      this.currentRoute = 'income';
     },
     isActive(route) {
       return this.currentRoute === route;
-    }
+    },
   },
-  watch: {
-    // Update current route when route changes
-    '$route'(to) {
-      this.currentRoute = to.name || to.path.substring(1);
-    }
-  }
-}
+};
 </script>
 
 <style lang="scss">
 @import "../assets/_base.scss";
-@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap");
 
 /* Main header container */
 .app-header {
@@ -88,7 +72,7 @@ export default {
   padding: 0 2rem;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
   @include flex(row, space-between, center, 1rem);
-  font-family: 'Roboto', sans-serif;
+  font-family: "Roboto", sans-serif;
 
   /* Company branding section */
   .company-branding {
@@ -263,10 +247,12 @@ export default {
       margin: 0 auto 0 2rem;
     }
 
-    .nav-button, .auth-button {
+    .nav-button,
+    .auth-button {
       padding: 0 1rem;
 
-      .nav-title, .auth-title {
+      .nav-title,
+      .auth-title {
         font-size: 1rem;
       }
     }
@@ -284,18 +270,21 @@ export default {
       margin-bottom: 0.5rem;
     }
 
-    .nav-section, .auth-links {
+    .nav-section,
+    .auth-links {
       margin: 0;
       width: 100%;
       justify-content: space-around;
     }
 
-    .nav-button, .auth-button {
+    .nav-button,
+    .auth-button {
       flex-direction: column;
       gap: 0.25rem;
       padding: 0.5rem 1rem;
 
-      .nav-title, .auth-title {
+      .nav-title,
+      .auth-title {
         font-size: 0.9rem;
       }
     }
