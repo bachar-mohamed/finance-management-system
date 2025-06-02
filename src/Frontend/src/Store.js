@@ -346,6 +346,7 @@ export default createStore({
       }
     },
     async updateUserInformation(context, payload) {
+      context.state.crudStatus.updateExpenseStatus = false;
       const url = "http://localhost:1234/api/user/update-info";
       const body = {
         userId: context.state.user.id,
@@ -362,6 +363,7 @@ export default createStore({
       }
     },
     async updateUserPassword(context, payload) {
+      context.state.crudStatus.updateExpenseStatus = false;
       const url = "http://localhost:1234/api/user/update-password";
       const body = {
         userId: context.state.user.id,
@@ -377,6 +379,7 @@ export default createStore({
       }
     },
     async deleteUserAccount(context) {
+      context.state.crudStatus.deleteExpenseStatus = false;
       const url = `http://localhost:1234/api/user/delete-user`;
       const body = {
         userId: context.state.user.id,

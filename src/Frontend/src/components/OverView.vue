@@ -87,15 +87,6 @@ export default {
   components: { DonutChartViewVue, LineChartViewVue },
   data() {
     return {
-      /*monthTextValue: this.months[this.selectedMonth-1].month,
-      expenseData: [
-        { value: 540, name: "Groceries" },
-        { value: 210, name: "Dining Out" },
-        { value: 350, name: "Transportation" },
-        { value: 420, name: "Utilities" },
-        { value: 180, name: "Entertainment" },
-        { value: 150, name: "Shopping" },
-      ],*/
       months: [
         { id: 1, month: "January" },
         { id: 2, month: "February" },
