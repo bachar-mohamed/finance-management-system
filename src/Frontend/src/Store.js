@@ -23,6 +23,8 @@ export default createStore({
       },
       user: {
         id: 1,
+        userName: "",
+        email: "",
         expenses: {
           serverData: [],
           expenseAllCategories: [],
@@ -52,6 +54,16 @@ export default createStore({
     },
     register(state, payload) {
       state.user.id = payload.id;
+    },
+    setUserInfo(state, payload) {
+      state.user.userName = payload.fullName;
+      state.user.email = payload.email;
+    },
+    setDeleteAccountStatus(state, payload) {
+      state.crudStatus.deleteExpenseStatus = payload;
+    },
+    setUpdateStatus(state, payload) {
+      state.crudStatus.updateExpenseStatus = payload;
     },
     //income
     setRevenues(state, payload) {
@@ -323,15 +335,67 @@ export default createStore({
         console.log(error);
       }
     },
+    async loadUserInformation(context) {
+      const url = `http://localhost:1234/api/user/get-info?userId=${context.state.user.id}`;
+      try {
+        const response = await REQUEST("GET", context.state.authRequest.token, url);
+        const data = response;
+        context.commit("setUserInfo", data);
+      } catch (error) {
+        console.log(error);
+      }
+    },
+    async updateUserInformation(context, payload) {
+      const url = "http://localhost:1234/api/user/update-info";
+      const body = {
+        userId: context.state.user.id,
+        userName: payload.userName,
+        email: payload.email,
+      };
+      try {
+        const response = await REQUEST("PUT", context.state.authRequest.token, url, body);
+        const data = response;
+        context.commit("setUpdateStatus", data);
+        context.state.crudStatus.updateExpenseStatus = true;
+      } catch (error) {
+        console.log(error);
+      }
+    },
+    async updateUserPassword(context, payload) {
+      const url = "http://localhost:1234/api/user/update-password";
+      const body = {
+        userId: context.state.user.id,
+        oldPassword: payload.currentPassword,
+        newPassword: payload.newPassword,
+      };
+      try {
+        const response = await REQUEST("PUT", context.state.authRequest.token, url, body);
+        const data = response;
+        context.commit("setUpdateStatus", data);
+      } catch (error) {
+        console.log(error);
+      }
+    },
+    async deleteUserAccount(context) {
+      const url = `http://localhost:1234/api/user/delete-user`;
+      const body = {
+        userId: context.state.user.id,
+      };
+      try {
+        const response = await REQUEST("DELETE", context.state.authRequest.token, url, body);
+        const data = response;
+        context.commit("setDeleteAccountStatus", data);
+      } catch (error) {
+        console.log(error);
+      }
+    },
     //incomes
     async loadRevenueList(context, payload) {
       console.log(payload);
       const url = `http://localhost:1234/api/incomes/monthly-income?userId=${context.state.user.id}&year=${payload.year}&month=${payload.month}`;
-      console.log(url);
       try {
         const response = await REQUEST("GET", context.state.authRequest.token, url);
         const data = response;
-        console.log(data);
         context.commit("setRevenues", data);
         context.commit("setMonthlyRevenueSum");
         context.commit("setTopRevenueCategories");
@@ -608,6 +672,12 @@ export default createStore({
     //others
     getNotificationIcons(state) {
       return state.notificationIcons;
+    },
+    getUserEmail(state) {
+      return state.user.email;
+    },
+    getUserName(state) {
+      return state.user.userName;
     },
   },
 });

@@ -28,10 +28,16 @@ export default {
     loadCategories() {
       this.$store.dispatch("loadCategories");
     },
+    loadUserData() {
+      this.$store.dispatch("loadUserInformation");
+    },
   },
   created() {
     this.updateData();
     this.loadCategories();
+    if (!this.getUserName) {
+      this.loadUserData();
+    }
   },
   computed: {
     ...mapGetters([
@@ -42,6 +48,7 @@ export default {
       "getPieChartData",
       "getMonthlyExpenses",
       "getExpenseCategories",
+      "getUserName",
     ]),
   },
 };

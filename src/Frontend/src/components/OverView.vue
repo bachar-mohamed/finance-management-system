@@ -25,12 +25,10 @@
           <div class="month-total">
             <h2>Total expenses</h2>
             <p class="amount">{{ monthlyTotal }}</p>
-            <p class="change-evaluator">evaluation here</p>
           </div>
           <div class="month-high">
             <h2>highest daily expense</h2>
             <p class="amount">{{ highestMonthlyValue }}</p>
-            <p class="change-evaluator">evaluation here</p>
           </div>
         </div>
       </div>
