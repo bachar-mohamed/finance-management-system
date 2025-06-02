@@ -265,9 +265,14 @@ section {
             background-color: #34495e;
             @include flex(row, center, center, 0rem);
             .cat-icon {
-              width: 4rem;
-              height: 4rem;
+              width: 3rem;
+              height: 3rem;
               fill: white;
+
+              svg {
+                width: 3rem;
+                height: 3rem;
+              }
             }
           }
 

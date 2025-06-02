@@ -112,11 +112,11 @@ export default {
             smooth: this.smoothLine,
             data: this.chartData,
             itemStyle: {
-              color: "orange",
+              color: this.$route.name == "expenses" ? "orange" : "green",
             },
             lineStyle: {
               width: 3,
-              color: "orange",
+              color: this.$route.name == "expenses" ? "orange" : "green",
             },
             areaStyle: {
               color: {
@@ -125,10 +125,16 @@ export default {
                 y: 0,
                 x2: 0,
                 y2: 1,
-                colorStops: [
-                  { offset: 0, color: "rgba(255, 165, 0, 0.5)" }, // lighter orange at top
-                  { offset: 1, color: "rgba(255, 165, 0, 0)" }, // transparent orange at bottom
-                ],
+                colorStops:
+                  this.$route.name == "expenses"
+                    ? [
+                        { offset: 0, color: "rgba(255, 165, 0, 0.5)" }, // lighter orange at top
+                        { offset: 1, color: "rgba(255, 165, 0, 0)" }, // transparent orange at bottom
+                      ]
+                    : [
+                        { offset: 0, color: "rgba(144, 238, 144, 0.5)" }, // LightGreen at top
+                        { offset: 1, color: "rgba(144, 238, 144, 0)" }, // Transparent green at bottom
+                      ],
               },
             },
             emphasis: {

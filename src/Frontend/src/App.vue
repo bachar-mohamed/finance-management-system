@@ -8,15 +8,16 @@
 <script>
 import FooterView from "@/components/FooterView";
 export default {
-  components:{FooterView}
+  components: { FooterView },
 };
 </script>
 
 <style lang="scss">
 @import "./assets/_base";
 
-html{
+html {
   font-size: 62.5%;
+  font-family: "Lexend", sans-serif;
 }
 * {
   box-sizing: border-box;

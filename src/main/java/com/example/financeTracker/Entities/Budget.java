@@ -3,7 +3,7 @@ import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "budget")
+@Table(name = "monthly_budget")
 public class Budget {
 
     @Id

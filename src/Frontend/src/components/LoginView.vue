@@ -1,12 +1,12 @@
 <template>
-  <!--
-  <notification-view
-      :source="source"
-      :message="text"
-      :button_text="button_content"
-      ref="notification"
-      class="custom-notification"
-  ></notification-view>-->
+  <auth-notification-view
+    v-if="isVisible"
+    v-model:visible="isVisible"
+    :image="source"
+    :notificationContent="text"
+    :buttonText="buttonContent"
+    @confirm="setIsVisible"
+  ></auth-notification-view>
   <card-view>
     <template v-slot:default>
       <form action="post" class="login-form">
@@ -59,16 +59,17 @@
 
 <script>
 import CardView from "./CardView.vue";
-//import NotificationView from "@/components/NotificationView";
+import AuthNotificationView from "./AuthNotificationView.vue";
 import { mapGetters } from "vuex";
 
 export default {
-  components: { CardView },
+  components: { CardView, AuthNotificationView },
   emits: ["error-msg"],
   data() {
     return {
+      isVisible: false,
       isLoading: false,
-      button_content: "",
+      buttonContent: "",
       text: "",
       source: "",
       email: "",
@@ -97,28 +98,32 @@ export default {
         email: this.email,
         password: this.password,
       };
-
       try {
         await this.$store.dispatch("authenticateUser", payload);
         if (this.getUserId != -1) {
           this.$router.push("/home/expenses");
         } else {
-          //this.$refs.notification.showNotification()
-          this.button_content = "OK";
-          this.text = "Wrong email or password. Please try again.";
+          this.buttonContent = "OK";
+          this.text = "Wrong email or password. Please try again!";
+          this.source = this.getNotificationIcons[1];
+          this.setIsVisible();
         }
       } catch (error) {
-        console.log("login failed: " + error);
-        //this.$refs.notification.showNotification()
-        this.button_content = "OK";
+        this.buttonContent = "OK";
         this.text = "Login failed. Please try again later.";
+        this.source = this.getNotificationIcons[1];
+        this.setIsVisible();
       }
       this.isLoading = false;
     },
+    setIsVisible() {
+      this.isVisible = !this.isVisible;
+    },
   },
   computed: {
-    ...mapGetters(["getUserId"]),
+    ...mapGetters(["getUserId", "getNotificationIcons"]),
   },
+  watch: {},
 };
 </script>
 
@@ -247,7 +252,7 @@ export default {
 
   p {
     margin: 0;
-    color: #666;
+    color: white;
     font-size: 1.2rem;
   }
 

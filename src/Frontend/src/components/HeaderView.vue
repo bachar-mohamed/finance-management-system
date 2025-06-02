@@ -5,30 +5,21 @@
       <span class="company-name">FinTrack</span>
     </div>
 
-    <!-- Navigation section -->
     <div class="nav-section">
-      <!-- Dashboard navigation button -->
-      <div class="nav-button" :class="{ active: isActive('overview') }" @click="openDashBoard">
-        <i class="nav-icon dashboard-icon"></i>
-        <h2 class="nav-title">Dashboard</h2>
-      </div>
-
-      <!-- Expenses navigation button -->
       <div class="nav-button" :class="{ active: isActive('expenses') }" @click="openExpenses">
         <i class="nav-icon expense-icon"></i>
         <h2 class="nav-title">Expenses</h2>
       </div>
-
-      <!-- Income navigation button -->
       <div class="nav-button" :class="{ active: isActive('income') }" @click="openIncome">
         <i class="nav-icon income-icon"></i>
         <h2 class="nav-title">Income</h2>
       </div>
     </div>
-
-    <!-- User profile section -->
-    <div class="user-profile" @click="switchToUser">
-      <i class="user-icon"></i>
+    <div class="right-side">
+      <h1 class="userName">{{ getUserName }}</h1>
+      <div class="user-profile" @click="switchToUser">
+        <i class="user-icon"></i>
+      </div>
     </div>
   </header>
 </template>

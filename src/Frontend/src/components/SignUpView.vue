@@ -1,4 +1,12 @@
 <template>
+  <auth-notification-view
+    v-if="isVisible"
+    v-model:visible="isVisible"
+    :image="source"
+    :notificationContent="text"
+    :buttonText="buttonContent"
+    @confirm="handleClick"
+  ></auth-notification-view>
   <card-view>
     <template v-slot:default>
       <form action="post" class="signup-form">
@@ -6,77 +14,72 @@
         <div class="form-group">
           <label for="username" class="form-label">Username</label>
           <div class="input-container">
-            <input type="text" v-model="userName" id="username" class="form-input" placeholder="Enter your username" />
+            <input
+              type="text"
+              v-model="userName"
+              id="username"
+              class="form-input"
+              placeholder="Enter your username"
+            />
           </div>
+          <small v-if="emptyUserName" class="error-message">Please provide a username</small>
         </div>
 
-        <!-- Email field with validation -->
         <div class="form-group">
           <label for="email" class="form-label">Email</label>
           <div class="input-container">
             <input
-                type="email"
-                :class="['form-input', { 'input-error': wrongInput }]"
-                v-model="email"
-                id="email"
-                placeholder="Enter your email address"
+              type="email"
+              :class="['form-input', { 'input-error': wrongInput }]"
+              v-model="email"
+              id="email"
+              placeholder="Enter your email address"
             />
-            <small v-if="wrongInput" class="error-message">Please enter a valid email address</small>
+            <small v-if="wrongInput" class="error-message"
+              >Please enter a valid email address</small
+            >
           </div>
         </div>
 
-        <!-- Password field with strength indicator -->
         <div class="form-group">
           <label for="password" class="form-label">Password</label>
           <div class="input-container">
             <input
-                type="password"
-                :class="['form-input', { 'input-error': wrongConfirmation }]"
-                v-model="password"
-                id="password"
-                placeholder="Create a strong password"
-                @input="checkPasswordStrength"
+              type="password"
+              :class="['form-input', { 'input-error': wrongConfirmation }]"
+              v-model="password"
+              id="password"
+              placeholder="Create a strong password"
+              @input="checkPasswordStrength"
             />
           </div>
-          <!-- Password strength indicator component -->
           <div class="password-strength-container">
             <div class="strength-bars">
-              <div
-                  v-for="n in 4"
-                  :key="n"
-                  :class="['strength-bar', getStrengthBarClass(n)]"
-              ></div>
+              <div v-for="n in 4" :key="n" :class="['strength-bar', getStrengthBarClass(n)]"></div>
             </div>
             <span class="strength-text" :class="strengthTextClass">{{ strengthText }}</span>
           </div>
         </div>
-
-        <!-- Password confirmation field -->
         <div class="form-group">
           <label for="confirm_password" class="form-label">Confirm Password</label>
           <div class="input-container">
             <input
-                type="password"
-                :class="['form-input', { 'input-error': wrongConfirmation }]"
-                v-model="confirmation"
-                id="confirm_password"
-                placeholder="Confirm your password"
+              type="password"
+              :class="['form-input', { 'input-error': wrongConfirmation }]"
+              v-model="confirmation"
+              id="confirm_password"
+              placeholder="Confirm your password"
             />
             <small v-if="wrongConfirmation" class="error-message">Passwords do not match</small>
           </div>
         </div>
 
-        <!-- Submit button - disabled when password is weak or form is invalid -->
-        <button
-            @click.prevent="formValidator"
-            class="signup-button"
-            :disabled="!isPasswordStrong || !isFormValid"
-        >
-          Create Account
+        <button @click.prevent="formValidator" class="signup-button">
+          <span v-if="!isLoading">Create Account</span>
+          <span v-else class="spinner"></span>
         </button>
       </form>
 
-      <!-- Login link section -->
       <div class="login-link">
         <p>Already have an account?</p>
         <span @click="switchToLogin" class="login-text">Login</span>
@@ -86,67 +89,61 @@
 </template>
 
 <script>
+import { mapGetters } from "vuex";
 import CardView from "./CardView.vue";
-import { JSON_REQUEST } from "@/js/Helper";
+import AuthNotificationView from "./AuthNotificationView.vue";
 
 export default {
-  components: { CardView },
+  components: { CardView, AuthNotificationView },
   data() {
     return {
+      success: false,
+      isLoading: false,
+      buttonContent: "",
+      text: "",
+      source: "",
+      isVisible: false,
       userName: "",
       email: "",
       password: "",
       confirmation: "",
+      emptyUserName: false,
       wrongInput: false,
       wrongConfirmation: false,
       passwordStrength: 0, // 0: none, 1: weak, 2: medium, 3: strong, 4: very strong
     };
   },
   computed: {
-    /**
-     * Returns descriptive text for current password strength
-     */
+    ...mapGetters(["getUserId", "getNotificationIcons"]),
+
     strengthText() {
       const texts = ["", "Weak", "Medium", "Strong", "Very Strong"];
       return texts[this.passwordStrength];
     },
 
-    /**
-     * Returns CSS class for strength text based on current strength level
-     */
     strengthTextClass() {
       const classes = ["", "text-danger", "text-warning", "text-success", "text-success"];
       return classes[this.passwordStrength];
     },
 
-    /**
-     * Determines if password is strong enough to allow form submission
-     * Requires at least medium strength (level 2)
-     */
     isPasswordStrong() {
-      return this.passwordStrength >= 2;
+      return this.passwordStrength >= 3;
     },
-
-    /**
-     * Validates overall form state
-     */
-    isFormValid() {
-      return this.userName && this.emailValidator(true) && this.password && this.confirmation && (this.password === this.confirmation);
-    }
   },
   methods: {
-    /**
-     * Navigates to login page
-     */
+    handleClick() {
+      if (this.success) {
+        this.isVisible = false;
+        this.switchToLogin();
+      } else {
+        this.isVisible = false;
+      }
+      this.isLoading = false;
+    },
     switchToLogin() {
       this.$router.push("login");
     },
 
-    /**
-     * Validates email format
-     * @param {boolean} silent - If true, doesn't update UI error state
-     * @returns {boolean} - Whether email is valid
-     */
     emailValidator(silent = false) {
       const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if (!emailPattern.test(this.email)) {
@@ -158,81 +155,64 @@ export default {
       }
     },
 
-    /**
-     * Evaluates password strength based on multiple criteria:
-     * - Length (8+ chars for +1, 12+ chars for +2)
-     * - Character variety (lowercase + uppercase for +1)
-     * - Numbers (presence for +1)
-     * - Special characters (presence for +1)
-     * Maximum strength is capped at 4
-     */
     checkPasswordStrength() {
-      // Reset strength
       let strength = 0;
-
-      // If password is empty, return 0
       if (this.password.length === 0) {
         this.passwordStrength = strength;
         return;
       }
-
-      // Check length
       if (this.password.length >= 8) strength += 1;
       if (this.password.length >= 12) strength += 1;
-
-      // Check for lowercase and uppercase letters
       if (/[a-z]/.test(this.password) && /[A-Z]/.test(this.password)) strength += 1;
-
-      // Check for numbers
       if (/\d/.test(this.password)) strength += 1;
-
-      // Check for special characters
       if (/[^A-Za-z0-9]/.test(this.password)) strength += 1;
-
-      // Cap strength at 4
       this.passwordStrength = Math.min(4, strength);
     },
-
-    /**
-     * Returns CSS class for strength bar based on current strength level
-     * @param {number} barIndex - Index of the strength bar (1-4)
-     * @returns {string} - CSS class name
-     */
     getStrengthBarClass(barIndex) {
       if (this.passwordStrength >= barIndex) {
-        if (this.passwordStrength === 1) return 'strength-weak';
-        if (this.passwordStrength === 2) return 'strength-medium';
-        if (this.passwordStrength >= 3) return 'strength-strong';
+        if (this.passwordStrength === 1) return "strength-weak";
+        if (this.passwordStrength === 2) return "strength-medium";
+        if (this.passwordStrength >= 3) return "strength-strong";
       }
-      return '';
+      return "";
     },
 
-    /**
-     * Validates form and submits if valid
-     * Prevents submission if password is weak or passwords don't match
-     */
-    formValidator() {
+    async formValidator() {
+      if (this.userName == "") {
+        this.emptyUserName = true;
+        return;
+      }
+      this.emptyUserName = false;
       this.emailValidator();
-
       if (this.password !== this.confirmation) {
         this.wrongConfirmation = true;
         return;
       }
-
       if (!this.isPasswordStrong) {
-        // Don't allow submission if password is not strong enough
         return;
       }
-
+      this.isLoading = true;
       const body = {
         userName: this.userName,
         email: this.email,
         password: this.password,
       };
-
+      await this.$store.dispatch("registerUser", body);
+      if (this.getUserId != -1) {
+        this.success = true;
+        this.buttonContent = "Login";
+        this.text = "Account Created Successfully!";
+        this.source = this.getNotificationIcons[0];
+        this.isVisible = true;
+      } else {
+        this.success = false;
+        this.buttonContent = "OK";
+        this.text = "Email Already Used!";
+        this.source = this.getNotificationIcons[1];
+        this.isVisible = true;
+      }
       this.wrongConfirmation = false;
-      console.log(body);
-      JSON_REQUEST("POST", "http://localhost:1234/api/auth/register", body);
+      this.isLoading = false;
     },
   },
 };
@@ -385,6 +365,23 @@ export default {
   &:disabled {
     background-color: #ccc;
     cursor: not-allowed;
+  }
+
+  .spinner {
+    width: 1rem;
+    height: 1rem;
+    border: 2px solid #fff;
+    border-top: 2px solid #3498db;
+    border-radius: 50%;
+    animation: spin 0.6s linear infinite;
+    display: inline-block;
+    vertical-align: middle;
+  }
+
+  @keyframes spin {
+    to {
+      transform: rotate(360deg);
+    }
   }
 }
 
