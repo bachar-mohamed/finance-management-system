@@ -2,15 +2,11 @@
   <transition name="slide-up">
     <div class="overlay-wrapper">
       <div class="content">
-        <button class="close-button" @click="closeModal">×</button>
         <div class="icon" v-html="image"></div>
         <p>{{ notificationContent }}</p>
         <button type="button" class="confirm-button" @click="operationConfirmed">
           <span v-if="!isLoading">{{ buttonText }}</span>
-          <span
-            v-else-if="isLoading && notificationContent.toLowerCase().includes('delete')"
-            class="spinner"
-          ></span>
+          <span v-else-if="isLoading" class="spinner"></span>
         </button>
       </div>
     </div>
@@ -18,10 +14,12 @@
 </template>
 
 <script>
-import { mapGetters } from "vuex";
-
 export default {
   props: {
+    isLoading: {
+      type: Boolean,
+      default: false,
+    },
     image: {
       type: String,
       default: "",
@@ -37,27 +35,11 @@ export default {
   },
   emits: ["confirm"],
   data() {
-    return {
-      isLoading: false,
-    };
+    return {};
   },
   methods: {
     operationConfirmed() {
-      this.isLoading = true;
       this.$emit("confirm");
-    },
-    closeModal() {
-      this.$emit("update:visible", false);
-    },
-  },
-  computed: {
-    ...mapGetters(["getDeleteExpenseStatus"]),
-  },
-  watch: {
-    getDeleteExpenseStatus(newVal) {
-      if (newVal == true) {
-        this.isLoading = false;
-      }
     },
   },
 };
@@ -87,23 +69,6 @@ export default {
     margin: auto;
     @include flex(column, center, center, 3rem);
 
-    .close-button {
-      position: absolute;
-      background-color: #bebebe;
-      top: 10px;
-      right: 10px;
-      border: none;
-      border-radius: 2rem;
-      font-size: 2rem;
-      text-align: center;
-      cursor: pointer;
-      color: black;
-      transition: backgorund 0.2s ease;
-
-      &:hover {
-        background-color: rgb(243, 82, 82);
-      }
-    }
     .icon {
       width: 4rem;
       height: 4rem;

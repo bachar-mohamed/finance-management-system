@@ -1,7 +1,7 @@
 <template>
   <acc-management-notification-view
     v-if="isVisible"
-    v-model:visible="isVisible"
+    :isLoading="isLoading"
     :image="source"
     :notificationContent="text"
     :buttonText="buttonContent"
@@ -52,7 +52,8 @@
             originalInformation.email == user.email,
         }"
       >
-        Save Profile
+        <span v-if="!isLoading">Save Profile</span>
+        <span v-else class="spinner"></span>
       </button>
 
       <hr class="divider" />
@@ -86,7 +87,10 @@
           }}</span>
         </div>
 
-        <button @click="submitNewPassword">Submit</button>
+        <button @click="submitNewPassword">
+          <span v-if="!isLoading">Submit</span>
+          <span v-else class="spinner"></span>
+        </button>
         <button @click="cancelPasswordChange" class="secondary">Cancel</button>
       </div>
 
@@ -96,7 +100,10 @@
           <h3>Delete Account</h3>
           <p>This action is irreversible. Proceed with caution.</p>
         </div>
-        <button @click="confirmDeleteAccount" class="danger">Delete My Account</button>
+        <button @click="deleteAccount" class="danger">
+          <span v-if="!isLoading">Delete My Account</span>
+          <span v-else class="spinner"></span>
+        </button>
       </div>
     </div>
   </section>
@@ -110,6 +117,8 @@ export default {
   data() {
     return {
       isVisible: false,
+      isLoading: false,
+      opType: 0,
       source: "",
       text: "",
       buttonContent: "",
@@ -157,21 +166,55 @@ export default {
       const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       return re.test(email);
     },
-    saveProfile() {
+    async handleConfirm(opType = this.opType) {
+      if (opType == 0) {
+        this.isVisible = false;
+        this.$store.commit("resetToken");
+        this.$router.push("/authentication/login");
+      } else if (opType == -1) {
+        this.isLoading = true;
+        await this.$store.dispatch("deleteUserAccount");
+        this.isLoading = false;
+        if (this.getSuccessStatus) {
+          this.text = "account deleted successfully";
+          this.buttonContent = "OK";
+          this.source = this.getNotificationIcons[0];
+        } else {
+          this.text = "something went wrong !";
+          this.buttonContent = "OK";
+          this.source = this.getNotificationIcons[1];
+        }
+        this.isVisible = true;
+        this.opType = 0;
+      }
+    },
+    async saveProfile() {
       console.log(this.originalInformation);
       this.validateField("userName");
       this.validateField("email");
-
+      this.isLoading = true;
       if (Object.values(this.errors).some((error) => error !== "")) {
         this.message = { text: "Please fix the errors in the form.", type: "error" };
         return;
       }
-      this.$store.dispatch("updateUserInformation", this.user);
+      await this.$store.dispatch("updateUserInformation", this.user);
+      this.isLoading = false;
+      if (this.getSuccessStatus) {
+        this.source = this.getNotificationIcons[0];
+        this.text = "updated successfully";
+        this.buttonContent = "login";
+        this.isVisible = true;
+      } else {
+        this.source = this.getNotificationIcons[1];
+        this.text = "something went wrong";
+        this.buttonContent = "ok";
+        this.isVisible = true;
+      }
     },
     requestPasswordChange() {
       this.passwordChangeMode = true;
     },
-    submitNewPassword() {
+    async submitNewPassword() {
       this.passwordErrors = {};
       const { currentPassword, newPassword, confirmNewPassword } = this.passwordForm;
 
@@ -188,7 +231,15 @@ export default {
       if (Object.keys(this.passwordErrors).length > 0) {
         return;
       }
-      this.$store.dispatch("updateUserPassword", this.passwordForm);
+      await this.$store.dispatch("updateUserPassword", this.passwordForm);
+      if (!this.getSuccessStatus) {
+        this.passwordErrors.currentPassword = "Current password is incorrect.";
+      } else {
+        this.source = this.getNotificationIcons[0];
+        this.text = "updated successfully";
+        this.buttonContent = "login";
+        this.isVisible = true;
+      }
     },
     resetPasswordForm() {
       this.passwordForm = {
@@ -201,28 +252,16 @@ export default {
     cancelPasswordChange() {
       this.resetPasswordForm();
     },
-    confirmDeleteAccount() {
-      const confirmDelete = confirm(
-        "Are you sure you want to delete your account? This action cannot be undone."
-      );
-      if (confirmDelete) {
-        this.deleteAccount();
-      }
-    },
-    deleteAccount() {
-      this.$store.dispatch("deleteUserAccount");
+    async deleteAccount() {
+      this.opType = -1;
+      this.text = "confirm account deletion";
+      this.buttonContent = "confirm";
+      this.source = this.getNotificationIcons[1];
+      this.isVisible = true;
     },
   },
   computed: {
-    ...mapGetters([
-      "getNotificationIcons",
-      "getUserEmail",
-      "getUserName",
-      "getAddExpenseStatus",
-      "getUpdateExpenseStatus",
-      "getDeleteExpenseStatus",
-      "getNotificationIcons",
-    ]),
+    ...mapGetters(["getNotificationIcons", "getUserEmail", "getUserName", "getSuccessStatus"]),
   },
   mounted() {
     this.user.userName = this.getUserName;
@@ -343,6 +382,23 @@ export default {
     border-radius: 0.4rem;
     cursor: pointer;
     margin-right: 1rem;
+
+    .spinner {
+      width: 1rem;
+      height: 1rem;
+      border: 2px solid #fff;
+      border-top: 2px solid #3498db;
+      border-radius: 50%;
+      animation: spin 0.6s linear infinite;
+      display: inline-block;
+      vertical-align: middle;
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
   }
 
   button.disabled {

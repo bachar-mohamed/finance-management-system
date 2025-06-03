@@ -1,6 +1,6 @@
 # Finance Management Web Application
 
-A full-stack finance management platform that allows users to efficiently track their income and expenses, analyze financial habits through visual charts, and manage personal data securely. Designed with a modern, responsive interface and built using **Spring Boot** and **Vue.js**.
+A full-stack finance management platform that allows users to efficiently track their income and expenses, analyze financial habits through visual charts, and manage personal data securely. Designed with a modern interface and built using **Spring Boot** and **Vue.js**.
 
 ## **Note:** This project is still a **work in progress**. Features and design may evolve as development continues.
 

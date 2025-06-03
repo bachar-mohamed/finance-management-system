@@ -34,9 +34,9 @@ export default {
   },
   created() {
     this.updateData();
-    this.loadCategories();
-    if (!this.getUserName) {
-      this.loadUserData();
+    this.loadUserData();
+    if (!this.getTotalExpense) {
+      this.loadCategories();
     }
   },
   computed: {

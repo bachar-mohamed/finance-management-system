@@ -32,7 +32,7 @@ public class UserController {
     public ResponseEntity<Boolean> updateBasicInformation(@RequestBody HashMap<String,Object> data){
         boolean status = service.updateUserInfo((Integer)data.get("userId"),(String)data.get("userName"),(String)data.get("email"));
         if(status){
-            return new ResponseEntity<>(false,HttpStatus.OK);
+            return new ResponseEntity<>(true,HttpStatus.OK);
         }
         return new ResponseEntity<>(status,HttpStatus.NOT_FOUND);
     }
@@ -47,8 +47,8 @@ public class UserController {
     }
 
     @DeleteMapping("/delete-user")
-    public ResponseEntity<Boolean> deleteUser(@RequestParam int userId){
-        boolean status = service.deleteUser(userId);
+    public ResponseEntity<Boolean> deleteUser(@RequestBody HashMap<String,Integer> data){
+        boolean status = service.deleteUser(data.get("userId"));
         if(status){
             return new ResponseEntity<>(true,HttpStatus.OK);
         }

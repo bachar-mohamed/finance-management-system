@@ -15,6 +15,7 @@ export default createStore({
       },
       crudStatus: {
         isLoading: false,
+        succeeded: false,
         addExpenseStatus: false,
         updateExpenseStatus: false,
         deleteExpenseStatus: false,
@@ -58,6 +59,9 @@ export default createStore({
     setUserInfo(state, payload) {
       state.user.userName = payload.fullName;
       state.user.email = payload.email;
+    },
+    resetToken(state) {
+      state.authRequest.token = "";
     },
     setDeleteAccountStatus(state, payload) {
       state.crudStatus.deleteExpenseStatus = payload;
@@ -346,7 +350,7 @@ export default createStore({
       }
     },
     async updateUserInformation(context, payload) {
-      context.state.crudStatus.updateExpenseStatus = false;
+      context.state.crudStatus.succeeded = false;
       const url = "http://localhost:1234/api/user/update-info";
       const body = {
         userId: context.state.user.id,
@@ -356,14 +360,15 @@ export default createStore({
       try {
         const response = await REQUEST("PUT", context.state.authRequest.token, url, body);
         const data = response;
-        context.commit("setUpdateStatus", data);
-        context.state.crudStatus.updateExpenseStatus = true;
+        console.log(`data is ${data}`);
+        //context.commit("setUpdateStatus", data);
+        context.state.crudStatus.succeeded = data;
       } catch (error) {
         console.log(error);
       }
     },
     async updateUserPassword(context, payload) {
-      context.state.crudStatus.updateExpenseStatus = false;
+      context.state.crudStatus.succeeded = false;
       const url = "http://localhost:1234/api/user/update-password";
       const body = {
         userId: context.state.user.id,
@@ -373,13 +378,13 @@ export default createStore({
       try {
         const response = await REQUEST("PUT", context.state.authRequest.token, url, body);
         const data = response;
-        context.commit("setUpdateStatus", data);
+        context.state.crudStatus.succeeded = data;
       } catch (error) {
         console.log(error);
       }
     },
     async deleteUserAccount(context) {
-      context.state.crudStatus.deleteExpenseStatus = false;
+      context.state.crudStatus.succeeded = false;
       const url = `http://localhost:1234/api/user/delete-user`;
       const body = {
         userId: context.state.user.id,
@@ -387,7 +392,7 @@ export default createStore({
       try {
         const response = await REQUEST("DELETE", context.state.authRequest.token, url, body);
         const data = response;
-        context.commit("setDeleteAccountStatus", data);
+        context.state.crudStatus.succeeded = data;
       } catch (error) {
         console.log(error);
       }
@@ -671,6 +676,9 @@ export default createStore({
     },
     getIsLoading(state) {
       return state.crudStatus.isLoading;
+    },
+    getSuccessStatus(state) {
+      return state.crudStatus.succeeded;
     },
     //others
     getNotificationIcons(state) {
