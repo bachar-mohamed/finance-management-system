@@ -1,16 +1,14 @@
 <template>
-  <transition name="slide-up">
-    <div class="overlay-wrapper">
-      <div class="content">
-        <div class="icon" v-html="image"></div>
-        <p>{{ notificationContent }}</p>
-        <button type="button" class="confirm-button" @click="operationConfirmed">
-          <span v-if="!isLoading">{{ buttonText }}</span>
-          <span v-else-if="isLoading" class="spinner"></span>
-        </button>
-      </div>
+  <div class="overlay-wrapper">
+    <div class="content">
+      <div class="icon" v-html="image"></div>
+      <p>{{ notificationContent }}</p>
+      <button type="button" class="confirm-button" @click="operationConfirmed">
+        <span v-if="!isLoading">{{ buttonText }}</span>
+        <span v-else-if="isLoading" class="spinner"></span>
+      </button>
     </div>
-  </transition>
+  </div>
 </template>
 
 <script>
@@ -105,25 +103,6 @@ export default {
         vertical-align: middle;
       }
     }
-  }
-
-  .fade-enter-active,
-  .fade-leave-active {
-    transition: opacity 0.3s ease;
-  }
-  .fade-enter-from,
-  .fade-leave-to {
-    opacity: 0;
-  }
-
-  .slide-up-enter-active,
-  .slide-up-leave-active {
-    transition: transform 0.3s ease, opacity 0.3s ease;
-  }
-  .slide-up-enter-from,
-  .slide-up-leave-to {
-    transform: translateY(30px);
-    opacity: 0;
   }
 }
 </style>

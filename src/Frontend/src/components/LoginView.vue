@@ -132,7 +132,7 @@ export default {
 
 /* Main title styling */
 .login-title {
-  font-size: 2rem;
+  font-size: 3rem;
   margin-bottom: 1.5rem;
   color: white;
   text-align: center;
@@ -156,7 +156,7 @@ export default {
 
 /* Label styling */
 .form-label {
-  font-size: 0.9rem;
+  font-size: 1.1rem;
   font-weight: 600;
   color: white;
   margin-bottom: 0.25rem;
@@ -254,6 +254,7 @@ export default {
     margin: 0;
     color: white;
     font-size: 1.2rem;
+    font-weight: bold;
   }
 
   .signup-text {

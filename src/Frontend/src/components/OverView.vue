@@ -22,13 +22,23 @@
       <div class="amount-data">
         <h1 class="title">may's Expenses Overview</h1>
         <div class="values-visualizer">
-          <div class="month-total">
+          <div
+            :class="{
+              'month-total-exp': $route.name === 'expenses',
+              'month-total-inc': $route.name === 'income',
+            }"
+          >
             <h2>Total expenses</h2>
-            <p class="amount">{{ monthlyTotal }}</p>
+            <p class="amount">{{ getFormatter.format(animatedValue) }}</p>
           </div>
-          <div class="month-high">
+          <div
+            :class="{
+              'month-high-exp': $route.name === 'expenses',
+              'month-high-inc': $route.name === 'income',
+            }"
+          >
             <h2>highest daily expense</h2>
-            <p class="amount">{{ highestMonthlyValue }}</p>
+            <p class="amount">{{ getFormatter.format(highestMonthlyValue) }}</p>
           </div>
         </div>
       </div>
@@ -41,7 +51,15 @@
             </div>
             <div class="category-info">
               <p class="cat-name">{{ category.categoryName }}</p>
-              <p class="cat-amount">{{ category.totalAmount }}</p>
+              <p
+                :class="{
+                  'cat-amount': true,
+                  'expense-data': $route.name === 'expenses',
+                  'revenue-data': $route.name === 'income',
+                }"
+              >
+                {{ getFormatter.format(category.totalAmount) }}
+              </p>
             </div>
           </li>
         </ul>
@@ -78,8 +96,10 @@
 </template>
 
 <script>
+import { mapGetters } from "vuex";
 import DonutChartViewVue from "./DonutChartView.vue";
 import LineChartViewVue from "./LineChartView.vue";
+import { Tween, Easing, Group } from "@tweenjs/tween.js";
 
 export default {
   props: ["monthlyTotal", "highestMonthlyValue", "categories", "lineChartData", "pieChartData"],
@@ -87,6 +107,8 @@ export default {
   components: { DonutChartViewVue, LineChartViewVue },
   data() {
     return {
+      tweenGroup: new Group(),
+      animatedValue: this.monthlyTotal.toFixed(0),
       months: [
         { id: 1, month: "January" },
         { id: 2, month: "February" },
@@ -114,6 +136,28 @@ export default {
       this.$emit("date_changed", periodValues);
     },
   },
+  watch: {
+    monthlyTotal(newValue) {
+      const tween = new Tween({ value: this.animatedValue })
+        .to({ value: newValue }, 1000)
+        .easing(Easing.Quadratic.Out)
+        .onUpdate((tweenState) => {
+          this.animatedValue = Math.round(tweenState.value * 100) / 100;
+        });
+      this.tweenGroup.add(tween);
+      tween.start();
+    },
+  },
+  computed: {
+    ...mapGetters(["getFormatter"]),
+  },
+  mounted() {
+    const animate = (time) => {
+      requestAnimationFrame(animate);
+      this.tweenGroup.update(time);
+    };
+    requestAnimationFrame(animate);
+  },
 };
 </script>
 
@@ -131,7 +175,7 @@ section {
     border: 2px solid #ccc;
     padding: 1rem;
     border-radius: 8px;
-    background-color: #f9f9f9;
+    background-color: #f9f9f979;
 
     .dropdown-container {
       @include flex(row, flex-start, center, 1rem);
@@ -187,6 +231,7 @@ section {
       padding: 0.5rem;
       width: 100%;
       height: 100%;
+      background-color: #ffffff88;
       border: 2px solid black;
       border-radius: 1rem;
       @include flex(column, flex-start, flex-start, 3rem);
@@ -204,7 +249,6 @@ section {
         padding: 0;
         margin: 0;
         list-style: none;
-
         display: grid;
         grid-template-columns: repeat(auto-fill, minmax(40%, 1fr));
         grid-auto-rows: 7rem; // Each row is 7rem tall
@@ -243,10 +287,6 @@ section {
           box-sizing: border-box;
           transition: background-color 0.3s ease;
 
-          &:hover {
-            background-color: darken(#b1c3d5, 10%);
-          }
-
           .cat-image {
             width: 6rem;
             height: 6rem;
@@ -272,11 +312,20 @@ section {
 
           .cat-name {
             font-size: 1.8rem;
+            color: black;
             font-weight: bold;
           }
 
           .cat-amount {
             font-size: 1.8rem;
+            font-weight: bold;
+          }
+
+          .revenue-data {
+            color: #27ae60;
+          }
+
+          .expense-data {
             color: #f39c12;
           }
         }
@@ -322,19 +371,30 @@ section {
           padding: 1rem;
           height: 100%;
           border-radius: 1rem;
-          background-color: #124e66;
           @include flex(column, flex-start, flex-start, 1rem);
-
           h2 {
             font-size: 1.8rem;
           }
           .amount {
             font-size: 6rem;
+            font-weight: bold;
             margin-bottom: 8rem;
           }
-          .change-evaluator {
-            font-size: 1.2rem;
-          }
+        }
+        .month-total-exp {
+          background-color: #ffb240;
+        }
+
+        .month-total-inc {
+          background-color: #048abf;
+        }
+
+        .month-high-exp {
+          background-color: #9eca83;
+        }
+
+        .month-high-inc {
+          background-color: #d96523;
         }
       }
     }

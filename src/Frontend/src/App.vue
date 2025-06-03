@@ -26,6 +26,5 @@ html {
 main {
   @include flex(column, flex-start, center, 0rem);
   overflow: hidden;
-  border: 2px solid red;
 }
 </style>

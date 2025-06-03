@@ -48,7 +48,6 @@ export default {
 @import "../assets/_base.scss";
 .exp_section {
   width: 100%;
-  border: 2px solid yellow;
   height: 100%;
   padding: 1rem;
   @include flex(column, flex-start, center, 5rem);

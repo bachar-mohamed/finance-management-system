@@ -6,6 +6,7 @@
 import * as echarts from "echarts";
 import "echarts-gl";
 import _ from "lodash";
+import { mapGetters } from "vuex";
 
 export default {
   name: "SymmetricalDonutChart",
@@ -61,7 +62,6 @@ export default {
 
       this.chartInstance = echarts.init(this.$refs.chart, this.theme);
       this.applyChartOptions();
-      this.triggerIntroAnimation();
     },
     registerCustomTheme() {
       echarts.registerTheme("custom", {
@@ -100,7 +100,7 @@ export default {
           formatter: (params) => {
             return `
               <div style="font-weight:bold;margin-bottom:5px">${params.name}</div>
-              <div>Amount: <b>${params.value}</b></div>
+              <div>Amount: <b>${this.getFormatter.format(params.value)}</b></div>
               <div>Percentage: <b>${params.percent}%</b></div>
             `;
           },
@@ -128,7 +128,7 @@ export default {
           data: this.chartData.map((item) => item.name),
           formatter: (name) => {
             const item = this.chartData.find((d) => d.name === name);
-            return `${name} (${item.value})`;
+            return `${name} (${this.getFormatter.format(item.value)})`;
           },
         },
         series: [
@@ -226,6 +226,9 @@ export default {
         });
       }
     }, 300),
+  },
+  computed: {
+    ...mapGetters(["getFormatter"]),
   },
 };
 </script>

@@ -245,7 +245,7 @@ export default {
   width: 100%;
 }
 .form-label {
-  font-size: 0.9rem;
+  font-size: 1.1rem;
   font-weight: 600;
   color: white;
   margin-bottom: 0.25rem;
@@ -395,6 +395,7 @@ export default {
     font-size: 1.2rem;
     margin: 0;
     color: white;
+    font-weight: bold;
   }
 
   .login-text {

@@ -47,7 +47,7 @@ export default {
       this.$router.push("income");
     },
     isActive(route) {
-      return this.currentRoute === route;
+      return this.$route.name === route;
     },
   },
   computed: {
@@ -106,6 +106,11 @@ export default {
     }
 
     &.active {
+      background-color: rgba(255, 255, 255, 0.2);
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    }
+
+    .selected {
       background-color: rgba(255, 255, 255, 0.2);
       box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
     }

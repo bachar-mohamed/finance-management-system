@@ -21,10 +21,46 @@
   <div v-if="list" class="list-container">
     <div class="control_tab">
       <button class="add-btn btn" @click="showAddForm">Add</button>
-      <button class="export-btn btn">export</button>
       <div class="search_container">
         <div v-html="searchIcon"></div>
-        <input class="search-input" type="text" placeholder="Search a transaction..." />
+        <input
+          v-model="searchedWord"
+          @input="search"
+          class="search-input"
+          type="text"
+          placeholder="Search a transaction..."
+        />
+      </div>
+      <div class="dropdown-container">
+        <label for="category-selector">Category Filter</label>
+        <select
+          id="category-selector"
+          v-model="selectedCatgory"
+          @change="categorySelected"
+          class="dropdown"
+        >
+          <option value="All" selected>All</option>
+          <option
+            v-for="category in this.$route.name == 'expenses'
+              ? this.getExpenseCategories
+              : this.getIncomeCategories"
+            :key="category.categoryId"
+            :value="category.categoryName"
+          >
+            {{ category.categoryName }}
+          </option>
+        </select>
+      </div>
+
+      <div class="counter">
+        <span
+          :class="{
+            'expense-data': $route.name === 'expenses',
+            'revenue-data': $route.name === 'income',
+          }"
+          >{{ this.list.length }}</span
+        >
+        <h1>Transaction</h1>
       </div>
     </div>
     <div class="list_titles">
@@ -32,15 +68,15 @@
       <h3>Description</h3>
       <h3>Category</h3>
       <div class="combination">
-        <div class="sort-arrow">&uarr;</div>
+        <!--  <div class="sort-arrow">&uarr;</div>-->
         <h3>Amount</h3>
       </div>
       <div class="combination">
-        <div class="sort-arrow">&uarr;</div>
+        <!--  <div class="sort-arrow">&uarr;</div>-->
         <h3>Date Added</h3>
       </div>
       <div class="combination">
-        <div class="sort-arrow">&uarr;</div>
+        <!--  <div class="sort-arrow">&uarr;</div>-->
         <h3>Date Updated</h3>
       </div>
     </div>
@@ -57,7 +93,15 @@
           <div class="category-img" v-html="item.categoryImage"></div>
           <p>{{ item.categoryName }}</p>
         </div>
-        <div class="amount">{{ item.amount }}</div>
+        <div
+          :class="{
+            amount: true,
+            'expense-data': $route.name === 'expenses',
+            'revenue-data': $route.name === 'income',
+          }"
+        >
+          {{ getFormatter.format(item.amount) }}
+        </div>
         <div class="d_add">{{ item.transactionDate }}</div>
         <div class="d_upload">{{ item.updatedAt }}</div>
         <div v-if="isHovered[index]" class="controls">
@@ -83,12 +127,15 @@ export default {
   data() {
     return {
       operationType: -1,
+      selectedCatgory: "All",
       notificationData: {
         itemId: -1,
         icon: "",
         message: "",
         buttonContent: "",
       },
+      searchedWord: "",
+      isLoading: false,
       isNotificationVisible: false,
       isFormVisible: false,
       selectedItem: {},
@@ -111,6 +158,11 @@ export default {
     setIsHovered(index) {
       this.isHovered.fill(false);
       this.isHovered[index] = true;
+    },
+    categorySelected() {
+      this.$route.name == "expenses"
+        ? this.$store.commit("filterExpensesByCategory", this.selectedCatgory)
+        : this.$store.commit("filterRevenueByCategory", this.selectedCatgory);
     },
     formatDate(date) {
       return date.toISOString().split("T")[0];
@@ -158,32 +210,40 @@ export default {
         this.isNotificationVisible = false;
       }
     },
-    handleFormSubmit(data) {
+    search() {
+      this.$route.name == "expenses"
+        ? this.$store.commit("searchExpense", this.searchedWord)
+        : this.$store.commit("searchRevenue", this.searchedWord);
+    },
+    async handleFormSubmit(data) {
       console.log(` optype is ${this.operationType}`);
       if (data.amount != undefined) {
         if (this.operationType == 1) {
           this.$route.name == "expenses"
-            ? this.$store.dispatch("addExpense", data)
-            : this.$store.dispatch("addRevenue", data);
+            ? await this.$store.dispatch("addExpense", data)
+            : await this.$store.dispatch("addRevenue", data);
         } else if (this.operationType == 2) {
           this.$route.name == "expenses"
-            ? this.$store.dispatch("updateExpense", data)
-            : this.$store.dispatch("updateRevenue", data);
+            ? await this.$store.dispatch("updateExpense", data)
+            : await this.$store.dispatch("updateRevenue", data);
         }
       }
     },
   },
   computed: {
     ...mapGetters([
-      "getIsLoading",
-      "getAddExpenseStatus",
-      "getUpdateExpenseStatus",
-      "getDeleteExpenseStatus",
+      "getAddStatus",
+      "getUpdateStatus",
+      "getDeleteStatus",
       "getNotificationIcons",
+      "getSuccessStatus",
+      "getFormatter",
+      "getIncomeCategories",
+      "getExpenseCategories",
     ]),
   },
   watch: {
-    getAddExpenseStatus(newVal) {
+    getAddStatus(newVal) {
       if (newVal == true) {
         this.notifyUser(
           -1,
@@ -196,7 +256,7 @@ export default {
         this.notifyUser(-1, -1, "something went wrong !", "OK", this.getNotificationIcons[1]);
       }
     },
-    getUpdateExpenseStatus(newVal) {
+    getUpdateStatus(newVal) {
       if (newVal == true) {
         this.notifyUser(
           -1,
@@ -209,7 +269,7 @@ export default {
         this.notifyUser(-1, 2, "something went wrong !", "OK", this.getNotificationIcons[1]);
       }
     },
-    getDeleteExpenseStatus(newVal) {
+    getDeleteStatus(newVal) {
       this.isNotificationVisible = false;
       if (newVal == true) {
         this.notifyUser(
@@ -250,9 +310,10 @@ li {
 }
 
 .list-container {
-  background-color: #f4f7fa;
+  background-color: #f4f7fa6d;
   width: 100%;
   height: 50rem;
+  border-radius: 2rem;
   @include flex(column, flex-start, center, 0.2rem);
 
   .control_tab {
@@ -279,10 +340,6 @@ li {
       background-color: #1ba7de;
     }
 
-    .export-btn {
-      background-color: #15a832;
-    }
-
     .search_container {
       @include flex(row, flex-start, center, 1rem);
       width: 30%;
@@ -306,13 +363,52 @@ li {
         }
       }
     }
+    .dropdown-container {
+      @include flex(row, flex-start, center, 1rem);
+      width: 30rem;
+      margin-left: 1rem;
+      margin-right: auto;
+      label {
+        font-size: 1.2rem;
+        font-weight: bold;
+        color: #333;
+      }
+
+      .dropdown {
+        width: 50%;
+        padding: 0.8rem;
+        font-size: 1.2rem;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        background-color: #fff;
+        transition: border-color 0.3s ease;
+      }
+
+      .dropdown:focus {
+        border-color: #4a90e2;
+      }
+    }
+
+    .counter {
+      width: 30rem;
+      @include flex(row, flex-end, center, 0.3rem);
+
+      span {
+        font-weight: bold;
+        font-size: 1.4rem;
+      }
+
+      h1 {
+        font-size: 1.2rem;
+      }
+    }
   }
 
   .list_titles {
-    width: 99.5%;
+    width: 99.1%;
     height: 5rem;
     padding: 1rem;
-    margin-right: 1rem;
+    margin-right: 0.7rem;
     background-color: #b4bdc1;
     color: black;
     font-weight: bold;
@@ -341,6 +437,14 @@ li {
         transform: rotate(180deg);
       }
     }
+  }
+
+  .revenue-data {
+    color: #27ae60;
+  }
+
+  .expense-data {
+    color: #f39c12;
   }
 
   ul {
@@ -374,7 +478,8 @@ li {
       position: relative;
       width: 99.5%;
       min-height: 5rem;
-      margin-right: 1rem;
+      margin-right: 0.5rem;
+      background-color: rgba(230, 223, 223, 0.532);
       border-bottom: 1px solid #e0e0e0;
       display: grid;
       grid-template-columns: 0.3fr 2fr 1fr 1fr 1fr 1fr;
@@ -414,7 +519,6 @@ li {
 
       .amount {
         font-weight: bold;
-        color: #27ae60;
       }
 
       .d_add,
