@@ -31,6 +31,17 @@ A full-stack finance management platform that allows users to efficiently track 
 
 ---
 
+- **Login Page**
+  ![App Screenshot](images/LoginScreenshot.jpeg)
+- **SingUp Page**
+  ![App Screenshot](images/SignUpScreenshot.jpeg)
+- **Expenses Page**
+  ![App Screenshot](images/ExpScreenshot.jpeg)
+- **Income Page**
+  ![App Screenshot](images/IncScreenshot.jpeg)
+- **User Profile Management Page**
+  ![App Screenshot](images/UserScreenshot.jpeg)
+
 ## Tech Stack
 
 ### Backend

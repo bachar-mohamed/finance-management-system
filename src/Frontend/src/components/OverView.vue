@@ -20,7 +20,9 @@
     </div>
     <div v-if="categories.length" class="data-visualizers">
       <div class="amount-data">
-        <h1 class="title">may's Expenses Overview</h1>
+        <h1 class="title">
+          {{ month }}'s {{ this.$route.name === "expenses" ? "Expenses" : "income" }} Overview
+        </h1>
         <div class="values-visualizer">
           <div
             :class="{
@@ -28,7 +30,7 @@
               'month-total-inc': $route.name === 'income',
             }"
           >
-            <h2>Total expenses</h2>
+            <h2>Total {{ this.$route.name === "expenses" ? "Expenses" : "income" }}</h2>
             <p class="amount">{{ getFormatter.format(animatedValue) }}</p>
           </div>
           <div
@@ -37,7 +39,7 @@
               'month-high-inc': $route.name === 'income',
             }"
           >
-            <h2>highest daily expense</h2>
+            <h2>highest daily {{ this.$route.name === "expenses" ? "Expense" : "income" }}</h2>
             <p class="amount">{{ getFormatter.format(highestMonthlyValue) }}</p>
           </div>
         </div>
@@ -78,7 +80,7 @@
         </div>
       </div>
       <div class="line-chart-container">
-        <h1 class="title">Daily Spending</h1>
+        <h1 class="title">Daily {{ this.$route.name === "expenses" ? "Spending" : "income" }}</h1>
         <div class="line-chart-visualizer">
           <line-chart-view-vue
             :chartData="lineChartData.amounts"
@@ -109,6 +111,7 @@ export default {
     return {
       tweenGroup: new Group(),
       animatedValue: this.monthlyTotal.toFixed(0),
+      month: "",
       months: [
         { id: 1, month: "January" },
         { id: 2, month: "February" },
@@ -135,8 +138,14 @@ export default {
       };
       this.$emit("date_changed", periodValues);
     },
+    setMonth(value = new Date().getMonth() + 1) {
+      this.month = this.months[value - 1].month;
+    },
   },
   watch: {
+    selectedMonth(newVal) {
+      this.setMonth(newVal);
+    },
     monthlyTotal(newValue) {
       const tween = new Tween({ value: this.animatedValue })
         .to({ value: newValue }, 1000)
@@ -157,6 +166,7 @@ export default {
       this.tweenGroup.update(time);
     };
     requestAnimationFrame(animate);
+    this.setMonth();
   },
 };
 </script>

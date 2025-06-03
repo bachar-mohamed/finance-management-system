@@ -39,11 +39,9 @@ export default {
       this.$router.push("overview");
     },
     openExpenses() {
-      this.$store.commit("setActiveTag", true);
       this.$router.push("expenses");
     },
     openIncome() {
-      this.$store.commit("setActiveTag", false);
       this.$router.push("income");
     },
     isActive(route) {
